@@ -633,9 +633,9 @@ class ZillowScraper:
         
         all_properties = []
         
-        logger.info(f"\\n{'='*60}")
+        logger.info("\n" + "="*60)
         logger.info(f"Scraping {location_name}, NY")
-        logger.info(f"{'='*60}")
+        logger.info("="*60)
         
         # Setup driver
         try:
@@ -873,10 +873,10 @@ class ZillowScraper:
         all_properties = []
         locations = self.config.locations
         
-        logger.info(f"\\n{'='*80}")
+        logger.info("\n" + "="*80)
         logger.info(f"Starting multi-location scraping: {', '.join([loc['name'] for loc in locations])}")
         logger.info(f"Pages per location: {max_pages}")
-        logger.info(f"{'='*80}\\n")
+        logger.info("="*80 + "\n")
         
         # Setup driver once for all locations
         try:
@@ -891,9 +891,9 @@ class ZillowScraper:
             location_name = location['name']
             region_id = location['region_id']
             
-            logger.info(f"\\n{'='*80}")
+            logger.info("\n" + "="*80)
             logger.info(f"Location {idx}/{len(locations)}: {location_name}, NY")
-            logger.info(f"{'='*80}")
+            logger.info("="*80)
             
             # Scrape all pages for this location
             for page in range(1, max_pages + 1):
@@ -1046,18 +1046,18 @@ class ZillowScraper:
             if idx < len(locations):
                 import random
                 delay = random.uniform(5, 8)
-                logger.info(f"\\n{'='*60}")
+                logger.info("\n" + "="*60)
                 logger.info(f"Completed {location_name}: {sum(1 for p in all_properties if p.address.borough == location_name)} properties")
                 logger.info(f"Waiting {delay:.1f}s before next location...")
-                logger.info(f"{'='*60}\\n")
+                logger.info("="*60 + "\n")
                 time.sleep(delay)
         
         # Close driver after all locations
         self._close_driver()
         
-        logger.info(f"\\n{'='*80}")
+        logger.info("\n" + "="*80)
         logger.info("MULTI-LOCATION SCRAPING COMPLETE")
-        logger.info(f"{'='*80}")
+        logger.info("="*80)
         logger.info(f"Total properties scraped: {len(all_properties)}")
         
         # Log breakdown by location
@@ -1066,7 +1066,7 @@ class ZillowScraper:
             count = sum(1 for p in all_properties if p.address.borough == location_name)
             logger.info(f"  {location_name}: {count} properties")
         
-        logger.info(f"{'='*80}\\n")
+        logger.info("="*80 + "\n")
         
         return all_properties
     
