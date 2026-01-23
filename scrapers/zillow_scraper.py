@@ -9,13 +9,22 @@ import re
 from typing import List, Optional
 from datetime import datetime
 import random
-import undetected_chromedriver as uc
+try:
+    import undetected_chromedriver as uc
+    UNDETECTED_AVAILABLE = True
+except ImportError:
+    UNDETECTED_AVAILABLE = False
+    
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from webdriver_manager.chrome import ChromeDriverManager
 
 from models import ZillowProperty, Address
 from config import config
@@ -31,49 +40,79 @@ class ZillowScraper:
         self.driver = None
         
     def _setup_driver(self, headless: bool = False, use_existing: bool = False):
-        """Initialize undetected ChromeDriver - automatically bypasses bot detection.
+        """Initialize ChromeDriver - uses undetected if available and configured, otherwise regular Selenium.
         
         Args:
             headless: Run Chrome in headless mode (not recommended for CAPTCHA)
             use_existing: Not used with undetected-chromedriver
         """
-        options = uc.ChromeOptions()
+        use_undetected = getattr(self.config, 'use_undetected', False) and UNDETECTED_AVAILABLE
         
-        # Basic options
+        if use_undetected:
+            logger.info("Attempting to use undetected-chromedriver...")
+            try:
+                options = uc.ChromeOptions()
+                
+                # Basic options
+                if headless:
+                    options.add_argument("--headless=new")
+                    options.add_argument("--window-size=1920,1080")
+                    logger.warning("Headless mode may trigger more CAPTCHAs")
+                
+                # Additional preferences for better stealth and stability
+                options.add_argument("--disable-blink-features=AutomationControlled")
+                options.add_argument("--disable-dev-shm-usage")
+                options.add_argument("--no-sandbox")
+                options.add_argument("--disable-gpu")
+                options.add_argument("--disable-software-rasterizer")
+                options.add_argument("--disable-extensions")
+                
+                # Prevent crashes
+                options.add_argument("--disable-crash-reporter")
+                options.add_argument("--disable-in-process-stack-traces")
+                
+                # Use undetected-chromedriver
+                self.driver = uc.Chrome(
+                    options=options,
+                    use_subprocess=True,
+                    version_main=None,  # Auto-detect Chrome version
+                )
+                
+                logger.info("✅ Undetected ChromeDriver initialized - bypassing bot detection")
+                
+                # Test that the driver is working
+                self.driver.get("about:blank")
+                time.sleep(1)
+                return
+                
+            except Exception as e:
+                logger.error(f"Failed to initialize undetected ChromeDriver: {e}")
+                logger.info("Falling back to regular Selenium...")
+        
+        # Fallback to regular Selenium
+        logger.info("Using regular Selenium ChromeDriver...")
+        options = Options()
+        
         if headless:
             options.add_argument("--headless=new")
             options.add_argument("--window-size=1920,1080")
-            logger.warning("Headless mode may trigger more CAPTCHAs")
         
-        # Additional preferences for better stealth and stability
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-gpu")
-        options.add_argument("--disable-software-rasterizer")
         options.add_argument("--disable-extensions")
+        options.add_argument("--start-maximized")
         
-        # Prevent crashes
-        options.add_argument("--disable-crash-reporter")
-        options.add_argument("--disable-in-process-stack-traces")
+        # Use webdriver-manager to auto-download correct chromedriver
+        service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=service, options=options)
         
-        try:
-            # Use undetected-chromedriver which handles anti-detection automatically
-            self.driver = uc.Chrome(
-                options=options,
-                use_subprocess=True,
-                version_main=None,  # Auto-detect Chrome version
-            )
-            
-            logger.info("✅ Undetected ChromeDriver initialized - bypassing bot detection")
-            
-            # Test that the driver is working
-            self.driver.get("about:blank")
-            time.sleep(1)
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize ChromeDriver: {e}")
-            raise
+        logger.info("✅ Regular ChromeDriver initialized")
+        
+        # Test that the driver is working
+        self.driver.get("about:blank")
+        time.sleep(1)
     
     def _login_to_zillow(self) -> bool:
         """Login to Zillow account to avoid bot detection."""

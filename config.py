@@ -19,7 +19,8 @@ class ZillowConfig(BaseModel):
         {"name": "Bronx", "search_location": "Bronx, NY", "region_id": 28779},
         {"name": "Queens", "search_location": "Queens, NY", "region_id": 270915}
     ])
-    max_pages: int = Field(default=1)  # Number of pages to scrape per location (1 for testing)    
+    max_pages: int = Field(default=1)  # Number of pages to scrape per location (1 for testing)
+    use_undetected: bool = Field(default=False)  # Use undetected_chromedriver (set to False if having issues)    
 
 class HPDConfig(BaseModel):
     """HPD API configuration."""
