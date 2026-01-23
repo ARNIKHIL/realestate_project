@@ -71,11 +71,11 @@ class ZillowScraper:
                 options.add_argument("--disable-crash-reporter")
                 options.add_argument("--disable-in-process-stack-traces")
                 
-                # Use undetected-chromedriver with specific version
+                # Use undetected-chromedriver with auto-detected version
                 self.driver = uc.Chrome(
                     options=options,
                     use_subprocess=False,  # Changed to False for better stability
-                    version_main=144,  # Explicitly set Chrome 144
+                    version_main=None,  # Auto-detect Chrome version
                     driver_executable_path=None,
                     browser_executable_path=None,
                 )
