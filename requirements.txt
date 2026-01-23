@@ -1,0 +1,31 @@
+# Web Scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+selenium>=4.15.0
+webdriver-manager>=4.0.1
+undetected-chromedriver>=3.5.4
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.24.0
+
+# API Integration
+aiohttp>=3.9.0
+
+# Database
+sqlalchemy>=2.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+loguru>=0.7.0
+
+# Rate Limiting & Async
+tenacity>=8.2.0
+
+# Export
+openpyxl>=3.1.0
+
+# Address Matching
+python-Levenshtein>=0.21.0
+fuzzywuzzy>=0.18.0
