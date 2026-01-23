@@ -51,6 +51,37 @@ class ZillowScraper:
         if use_undetected:
             logger.info("Attempting to use undetected-chromedriver...")
             try:
+                # Detect Chrome version dynamically
+                import subprocess
+                import platform
+                
+                chrome_version = None
+                try:
+                    if platform.system() == "Windows":
+                        # Windows: Check Chrome version from registry or executable
+                        result = subprocess.run(
+                            ['reg', 'query', 'HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon', '/v', 'version'],
+                            capture_output=True, text=True, timeout=5
+                        )
+                        if result.returncode == 0:
+                            chrome_version = int(result.stdout.split()[-1].split('.')[0])
+                    elif platform.system() == "Darwin":  # macOS
+                        result = subprocess.run(
+                            ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '--version'],
+                            capture_output=True, text=True, timeout=5
+                        )
+                        if result.returncode == 0:
+                            chrome_version = int(result.stdout.split()[-1].split('.')[0])
+                    elif platform.system() == "Linux":
+                        result = subprocess.run(['google-chrome', '--version'], capture_output=True, text=True, timeout=5)
+                        if result.returncode == 0:
+                            chrome_version = int(result.stdout.split()[-1].split('.')[0])
+                except Exception as ver_error:
+                    logger.warning(f"Could not detect Chrome version: {ver_error}")
+                
+                if chrome_version:
+                    logger.info(f"Detected Chrome version: {chrome_version}")
+                
                 options = uc.ChromeOptions()
                 
                 # Basic options
@@ -71,11 +102,11 @@ class ZillowScraper:
                 options.add_argument("--disable-crash-reporter")
                 options.add_argument("--disable-in-process-stack-traces")
                 
-                # Use undetected-chromedriver with auto-detected version
+                # Use undetected-chromedriver with detected version
                 self.driver = uc.Chrome(
                     options=options,
-                    use_subprocess=False,  # Changed to False for better stability
-                    version_main=None,  # Auto-detect Chrome version
+                    use_subprocess=False,
+                    version_main=chrome_version,  # Use detected version
                     driver_executable_path=None,
                     browser_executable_path=None,
                 )
