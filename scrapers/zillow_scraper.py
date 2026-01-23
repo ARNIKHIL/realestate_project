@@ -45,19 +45,35 @@ class ZillowScraper:
             options.add_argument("--window-size=1920,1080")
             logger.warning("Headless mode may trigger more CAPTCHAs")
         
-        # Additional preferences for better stealth
+        # Additional preferences for better stealth and stability
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--no-sandbox")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--disable-extensions")
         
-        # Use undetected-chromedriver which handles anti-detection automatically
-        self.driver = uc.Chrome(
-            options=options,
-            use_subprocess=True,
-            version_main=None,  # Auto-detect Chrome version
-        )
+        # Prevent crashes
+        options.add_argument("--disable-crash-reporter")
+        options.add_argument("--disable-in-process-stack-traces")
         
-        logger.info("✅ Undetected ChromeDriver initialized - bypassing bot detection")
+        try:
+            # Use undetected-chromedriver which handles anti-detection automatically
+            self.driver = uc.Chrome(
+                options=options,
+                use_subprocess=True,
+                version_main=None,  # Auto-detect Chrome version
+            )
+            
+            logger.info("✅ Undetected ChromeDriver initialized - bypassing bot detection")
+            
+            # Test that the driver is working
+            self.driver.get("about:blank")
+            time.sleep(1)
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize ChromeDriver: {e}")
+            raise
     
     def _login_to_zillow(self) -> bool:
         """Login to Zillow account to avoid bot detection."""
@@ -882,6 +898,7 @@ class ZillowScraper:
         try:
             self._setup_driver(headless=False)
             logger.info("Browser ready - starting multi-location scraping...")
+            time.sleep(3)  # Give the browser time to fully initialize
         except Exception as e:
             logger.error(f"Error setting up driver: {e}")
             return all_properties
@@ -900,6 +917,18 @@ class ZillowScraper:
                 logger.info(f"Scraping {location_name} - page {page}/{max_pages}")
                 
                 try:
+                    # Check if driver is still alive, if not reinitialize
+                    try:
+                        _ = self.driver.current_url
+                    except Exception as driver_error:
+                        logger.warning(f"Driver connection lost, reinitializing: {driver_error}")
+                        try:
+                            self._close_driver()
+                        except:
+                            pass
+                        self._setup_driver(headless=False)
+                        time.sleep(2)
+                    
                     url = self._build_search_url(page, location_name, region_id)
                     logger.debug(f"Loading URL: {url[:100]}...")
                     self.driver.get(url)
