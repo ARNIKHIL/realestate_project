@@ -20,7 +20,7 @@ class ZillowConfig(BaseModel):
         {"name": "Queens", "search_location": "Queens, NY", "region_id": 270915}
     ])
     max_pages: int = Field(default=1)  # Number of pages to scrape per location (1 for testing)
-    use_undetected: bool = Field(default=False)  # Use undetected_chromedriver (set to False if having issues)    
+    use_undetected: bool = Field(default=True)  # Use undetected_chromedriver for better bot detection bypass    
 
 class HPDConfig(BaseModel):
     """HPD API configuration."""

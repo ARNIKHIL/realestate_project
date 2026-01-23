@@ -71,11 +71,13 @@ class ZillowScraper:
                 options.add_argument("--disable-crash-reporter")
                 options.add_argument("--disable-in-process-stack-traces")
                 
-                # Use undetected-chromedriver
+                # Use undetected-chromedriver with specific version
                 self.driver = uc.Chrome(
                     options=options,
-                    use_subprocess=True,
-                    version_main=None,  # Auto-detect Chrome version
+                    use_subprocess=False,  # Changed to False for better stability
+                    version_main=144,  # Explicitly set Chrome 144
+                    driver_executable_path=None,
+                    browser_executable_path=None,
                 )
                 
                 logger.info("✅ Undetected ChromeDriver initialized - bypassing bot detection")
@@ -88,6 +90,7 @@ class ZillowScraper:
             except Exception as e:
                 logger.error(f"Failed to initialize undetected ChromeDriver: {e}")
                 logger.info("Falling back to regular Selenium...")
+                raise  # Re-raise to stop if undetected is required
         
         # Fallback to regular Selenium
         logger.info("Using regular Selenium ChromeDriver...")
