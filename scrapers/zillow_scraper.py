@@ -348,7 +348,7 @@ class ZillowScraper:
             logger.info("Chrome WebDriver closed")
     
     def _build_search_url(self, page: int = 1, location_name: str = "Brooklyn", region_id: int = 37607) -> str:
-        \"\"\"
+        """
         Build Zillow search URL with filters applied for a specific location.
         
         Args:
@@ -362,12 +362,12 @@ class ZillowScraper:
         - Price: max $2,500,000
         - Bedrooms: min 5
         - Bathrooms: min 4
-        \"\"\"
+        """
         from config import config
         
         # Build base URL with location
-        location_slug = location_name.lower().replace(\" \", \"-\")
-        base = f\"{self.config.base_url}/{location_slug}-new-york-ny/duplex/\"
+        location_slug = location_name.lower().replace(" ", "-")
+        base = f"{self.config.base_url}/{location_slug}-new-york-ny/duplex/"
         
         # Build filter state with all criteria
         # Based on the user's example URL structure
@@ -614,7 +614,7 @@ class ZillowScraper:
         return None
     
     def scrape_listings(self, max_pages: Optional[int] = None, location_name: str = "Brooklyn", region_id: int = 37607) -> List[ZillowProperty]:
-        \"\"\"
+        """
         Scrape property listings from Zillow for a specific location.
         
         Strategy: Login once, then reuse the same browser session for all pages.
@@ -627,15 +627,15 @@ class ZillowScraper:
             
         Returns:
             List of ZillowProperty objects
-        \"\"\"
+        """
         if max_pages is None:
             max_pages = self.config.max_pages
         
         all_properties = []
         
         logger.info(f"\\n{'='*60}")
-        logger.info(f\"Scraping {location_name}, NY\")
-        logger.info(f\"{'='*60}\")
+        logger.info(f"Scraping {location_name}, NY")
+        logger.info(f"{'='*60}")
         
         # Setup driver
         try:
@@ -855,7 +855,7 @@ class ZillowScraper:
         return all_properties
     
     def scrape_all_locations(self, max_pages: Optional[int] = None) -> List[ZillowProperty]:
-        \"\"\"
+        """
         Scrape property listings from all configured NYC locations.
         
         This method iterates through all locations in the config (Manhattan, Brooklyn, Bronx, Queens)
@@ -866,7 +866,7 @@ class ZillowScraper:
             
         Returns:
             Combined list of ZillowProperty objects from all locations
-        \"\"\"
+        """
         if max_pages is None:
             max_pages = self.config.max_pages
         
@@ -874,16 +874,16 @@ class ZillowScraper:
         locations = self.config.locations
         
         logger.info(f"\\n{'='*80}")
-        logger.info(f\"Starting multi-location scraping: {', '.join([loc['name'] for loc in locations])}\")
-        logger.info(f\"Pages per location: {max_pages}\")
-        logger.info(f\"{'='*80}\\n\")
+        logger.info(f"Starting multi-location scraping: {', '.join([loc['name'] for loc in locations])}")
+        logger.info(f"Pages per location: {max_pages}")
+        logger.info(f"{'='*80}\\n")
         
         # Setup driver once for all locations
         try:
             self._setup_driver(headless=False)
-            logger.info(\"Browser ready - starting multi-location scraping...\")
+            logger.info("Browser ready - starting multi-location scraping...")
         except Exception as e:
-            logger.error(f\"Error setting up driver: {e}\")
+            logger.error(f"Error setting up driver: {e}")
             return all_properties
         
         # Scrape each location
@@ -891,28 +891,28 @@ class ZillowScraper:
             location_name = location['name']
             region_id = location['region_id']
             
-            logger.info(f\"\\n{'='*80}\")
-            logger.info(f\"Location {idx}/{len(locations)}: {location_name}, NY\")
-            logger.info(f\"{'='*80}\")
+            logger.info(f"\\n{'='*80}")
+            logger.info(f"Location {idx}/{len(locations)}: {location_name}, NY")
+            logger.info(f"{'='*80}")
             
             # Scrape all pages for this location
             for page in range(1, max_pages + 1):
-                logger.info(f\"Scraping {location_name} - page {page}/{max_pages}\")
+                logger.info(f"Scraping {location_name} - page {page}/{max_pages}")
                 
                 try:
                     url = self._build_search_url(page, location_name, region_id)
-                    logger.debug(f\"Loading URL: {url[:100]}...\")
+                    logger.debug(f"Loading URL: {url[:100]}...")
                     self.driver.get(url)
                     
                     # Random delay to mimic human behavior
                     import random
                     human_delay = random.uniform(3, 6)
-                    logger.debug(f\"Waiting {human_delay:.1f}s for page to load...\")
+                    logger.debug(f"Waiting {human_delay:.1f}s for page to load...")
                     time.sleep(human_delay)
                     
                     # Simulate human mouse movements
                     try:
-                        body = self.driver.find_element(By.TAG_NAME, \"body\")
+                        body = self.driver.find_element(By.TAG_NAME, "body")
                         actions = ActionChains(self.driver)
                         for _ in range(random.randint(2, 4)):
                             x_offset = random.randint(50, 300)
@@ -924,36 +924,36 @@ class ZillowScraper:
                         pass
                     
                     # Scroll
-                    self.driver.execute_script(\"window.scrollTo(0, document.body.scrollHeight/3);\")
+                    self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight/3);")
                     time.sleep(random.uniform(0.3, 0.7))
-                    self.driver.execute_script(\"window.scrollTo(0, document.body.scrollHeight/2);\")
+                    self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2);")
                     time.sleep(random.uniform(0.3, 0.7))
                     
                     # Check for CAPTCHA
-                    logger.info(f\"Checking for CAPTCHA on page {page}...\")
+                    logger.info(f"Checking for CAPTCHA on page {page}...")
                     page_source = self.driver.page_source.lower()
                     
                     if 'press & hold' in page_source or 'press and hold' in page_source:
-                        logger.warning(f\"⚠️  CAPTCHA detected on page {page}! Attempting to solve...\")
+                        logger.warning(f"⚠️  CAPTCHA detected on page {page}! Attempting to solve...")
                         
                         if self._check_and_solve_captcha():
-                            logger.info(\"✅ CAPTCHA solved! Continuing with scraping...\")
+                            logger.info("✅ CAPTCHA solved! Continuing with scraping...")
                             time.sleep(3)
                         else:
-                            logger.error(\"❌ Could not solve CAPTCHA automatically\")
-                            logger.warning(\"⏸️  Browser will pause for 20 seconds - solve manually if needed\")
+                            logger.error("❌ Could not solve CAPTCHA automatically")
+                            logger.warning("⏸️  Browser will pause for 20 seconds - solve manually if needed")
                             time.sleep(20)
                             
                             page_source = self.driver.page_source.lower()
                             if 'press & hold' in page_source:
-                                logger.error(\"CAPTCHA still present, skipping this page...\")
+                                logger.error("CAPTCHA still present, skipping this page...")
                                 continue
                     
                     # Scroll to load all properties
-                    logger.info(\"📜 Scrolling to load all listings...\")
+                    logger.info("📜 Scrolling to load all listings...")
                     
                     try:
-                        main_scrollable = self.driver.execute_script(\"\"\"
+                        main_scrollable = self.driver.execute_script("""
                             const all = document.querySelectorAll('*');
                             for (let el of all) {
                                 const style = window.getComputedStyle(el);
@@ -964,61 +964,61 @@ class ZillowScraper:
                                 }
                             }
                             return null;
-                        \"\"\")
+                        """)
                         
                         if main_scrollable:
-                            scroll_script = \"\"\"
+                            scroll_script = """
                             const scrollable = arguments[0];
                             const scrollAmount = arguments[1];
                             scrollable.scrollTop += scrollAmount;
                             return scrollable.scrollTop;
-                            \"\"\"
+                            """
                             
                             for i in range(15):
                                 self.driver.execute_script(scroll_script, main_scrollable, 500)
                                 time.sleep(random.uniform(1, 2))
                             
                             time.sleep(3)
-                            self.driver.execute_script(\"arguments[0].scrollTop = 0;\", main_scrollable)
+                            self.driver.execute_script("arguments[0].scrollTop = 0;", main_scrollable)
                             time.sleep(1)
                         else:
                             for i in range(10):
-                                self.driver.execute_script(f\"window.scrollBy(0, 600);\")
+                                self.driver.execute_script(f"window.scrollBy(0, 600);")
                                 time.sleep(1.5)
                     except Exception as scroll_error:
-                        logger.error(f\"Scroll error: {scroll_error}\")
+                        logger.error(f"Scroll error: {scroll_error}")
                         for i in range(8):
-                            self.driver.execute_script(f\"window.scrollBy(0, 700);\")
+                            self.driver.execute_script(f"window.scrollBy(0, 700);")
                             time.sleep(1.5)
                     
                     # Wait for property cards
                     try:
                         WebDriverWait(self.driver, self.scraping_config.timeout).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, \"article[data-test='property-card']\"))
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "article[data-test='property-card']"))
                         )
                     except TimeoutException:
-                        logger.warning(f\"Timeout waiting for property cards on page {page} in {location_name}\")
+                        logger.warning(f"Timeout waiting for property cards on page {page} in {location_name}")
                         
                         no_results_indicators = [
-                            \"no results found\",
-                            \"0 homes\",
-                            \"no homes available\",
-                            \"didn't find any results\"
+                            "no results found",
+                            "0 homes",
+                            "no homes available",
+                            "didn't find any results"
                         ]
                         
                         if any(indicator in page_source for indicator in no_results_indicators):
-                            logger.info(f\"Reached end of results at page {page} for {location_name}\")
+                            logger.info(f"Reached end of results at page {page} for {location_name}")
                             break
                         
-                        logger.warning(f\"Page {page} may have been blocked or has no results\")
+                        logger.warning(f"Page {page} may have been blocked or has no results")
                         continue
                     
                     # Parse property cards
-                    property_cards = self.driver.find_elements(By.CSS_SELECTOR, \"article[data-test='property-card']\")
-                    logger.info(f\"Found {len(property_cards)} property cards on page {page}\")
+                    property_cards = self.driver.find_elements(By.CSS_SELECTOR, "article[data-test='property-card']")
+                    logger.info(f"Found {len(property_cards)} property cards on page {page}")
                     
                     if len(property_cards) == 0:
-                        logger.warning(f\"No property cards found on page {page} in {location_name}\")
+                        logger.warning(f"No property cards found on page {page} in {location_name}")
                         continue
                     
                     # Parse each card
@@ -1028,45 +1028,45 @@ class ZillowScraper:
                         if property_data:
                             all_properties.append(property_data)
                             page_properties += 1
-                            logger.info(f\"  📍 Found: {property_data.address.street}\")
+                            logger.info(f"  📍 Found: {property_data.address.street}")
                     
-                    logger.info(f\"Successfully parsed {page_properties} properties from {location_name} page {page}\")
+                    logger.info(f"Successfully parsed {page_properties} properties from {location_name} page {page}")
                     
                 except Exception as e:
-                    logger.error(f\"Error scraping {location_name} page {page}: {e}\")
+                    logger.error(f"Error scraping {location_name} page {page}: {e}")
                 
                 # Wait between pages
                 if page < max_pages:
                     import random
                     delay = random.uniform(3, 5)
-                    logger.info(f\"Waiting {delay:.1f}s before next page...\")
+                    logger.info(f"Waiting {delay:.1f}s before next page...")
                     time.sleep(delay)
             
             # Wait between locations
             if idx < len(locations):
                 import random
                 delay = random.uniform(5, 8)
-                logger.info(f\"\\n{'='*60}\")
-                logger.info(f\"Completed {location_name}: {sum(1 for p in all_properties if p.address.borough == location_name)} properties\")
-                logger.info(f\"Waiting {delay:.1f}s before next location...\")
-                logger.info(f\"{'='*60}\\n\")
+                logger.info(f"\\n{'='*60}")
+                logger.info(f"Completed {location_name}: {sum(1 for p in all_properties if p.address.borough == location_name)} properties")
+                logger.info(f"Waiting {delay:.1f}s before next location...")
+                logger.info(f"{'='*60}\\n")
                 time.sleep(delay)
         
         # Close driver after all locations
         self._close_driver()
         
-        logger.info(f\"\\n{'='*80}\")
-        logger.info(\"MULTI-LOCATION SCRAPING COMPLETE\")
-        logger.info(f\"{'='*80}\")
-        logger.info(f\"Total properties scraped: {len(all_properties)}\")
+        logger.info(f"\\n{'='*80}")
+        logger.info("MULTI-LOCATION SCRAPING COMPLETE")
+        logger.info(f"{'='*80}")
+        logger.info(f"Total properties scraped: {len(all_properties)}")
         
         # Log breakdown by location
         for location in locations:
             location_name = location['name']
             count = sum(1 for p in all_properties if p.address.borough == location_name)
-            logger.info(f\"  {location_name}: {count} properties\")
+            logger.info(f"  {location_name}: {count} properties")
         
-        logger.info(f\"{'='*80}\\n\")
+        logger.info(f"{'='*80}\\n")
         
         return all_properties
     
