@@ -19,7 +19,7 @@ class ZillowConfig(BaseModel):
         {"name": "Bronx", "search_location": "Bronx, NY", "region_id": 28779},
         {"name": "Queens", "search_location": "Queens, NY", "region_id": 270915}
     ])
-    max_pages: int = Field(default=1)  # Number of pages to scrape per location (1 for testing)
+    max_pages: int = Field(default=15)  # Number of pages to scrape per location (increase for more results)
     use_undetected: bool = Field(default=True)  # Use undetected_chromedriver for better bot detection bypass    
 
 class HPDConfig(BaseModel):
@@ -73,7 +73,7 @@ class Config:
         self.zillow = ZillowConfig(
             base_url=os.getenv("ZILLOW_BASE_URL", "https://www.zillow.com"),
             locations=default_locations,
-            max_pages=int(os.getenv("ZILLOW_MAX_PAGES", "1"))  # Default to 1 page per location
+            max_pages=int(os.getenv("ZILLOW_MAX_PAGES", "15"))  # Default to 15 pages per location
         )
         
         self.hpd = HPDConfig(
